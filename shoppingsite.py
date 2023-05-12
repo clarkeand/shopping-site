@@ -64,19 +64,6 @@ def add_to_cart(melon_id):
     page and display a confirmation message: 'Melon successfully added to
     cart'."""
 
-    if 'cart' in session: 
-        cart = session['cart']
-    else:
-        cart = session['cart'] = {}
-
-    if cart.get(melon_id) == None: 
-        cart[melon_id] = 0
-    cart[melon_id] += 1
-
-    flash(f"{melon_id} successfully added to cart.")
-
-    return redirect("/cart")
-
     # The logic here should be something like:
     #
     # - check if a "cart" exists in the session, and create one (an empty
@@ -86,12 +73,26 @@ def add_to_cart(melon_id):
     # - flash a success message
     # - redirect the user to the cart page
 
+    if 'cart' in session: 
+        cart = session['cart']
+    else:
+        cart = session['cart'] = {}
+
+    if cart.get(melon_id) == None: 
+        cart[melon_id] = 0
+        
+    cart[melon_id] += 1
+
+    flash(f"{melon_id} successfully added to cart.")
+
+    return redirect("/cart")
+
+
+
 
 @app.route("/cart")
 def show_shopping_cart():
     """Display content of shopping cart."""
-
-    # TODO: Display the contents of the shopping cart.
 
     # The logic here will be something like:
     #
@@ -108,8 +109,20 @@ def show_shopping_cart():
     #
     # Make sure your function can also handle the case wherein no cart has
     # been added to the session
+    order_total = 0
 
-    return render_template("cart.html")
+    cart = session.get("cart", {})
+    melons_cart = [] 
+    for melon_id, quantity in cart.items():
+        melon = melons.get_by_id(melon_id)
+        subtotal = melon.price * quantity
+        order_total += subtotal
+
+        melon.quantity = quantity
+        melon.total_cost = order_total
+        melons_cart.append(melon)
+
+    return render_template("cart.html", cart = melons_cart, order_total = order_total)
 
 
 @app.route("/login", methods=["GET"])
